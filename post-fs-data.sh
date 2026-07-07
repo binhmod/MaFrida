@@ -29,7 +29,10 @@ remove_unused_binaries() {
 prepare_mafrida_script() {
 
     # VERSION_DIR directory to the module directory
-    sed -i "s|VERSION_DIR=\.|VERSION_DIR=$MODPATH|g" $MODPATH/scripts/mafrida
+    sed -i "s|MODPATH=\.|MODPATH=$MODPATH|g" $MODPATH/scripts/mafrida
+
+    # set MODPATH to the module directory
+    sed -i "s|MODPATH=\${0%/\*}|MODPATH=$MODPATH|g" $MODPATH/common.sh
 
     # copy to system/bin
     cp -f "$MODPATH/scripts/mafrida" "$MODPATH/system/bin"
@@ -60,5 +63,3 @@ remove_unused_binaries
 prepare_mafrida_script
 set_permission
 prepare_symlinks
-
-
