@@ -14,9 +14,12 @@ sleep 20 # sleep for 20 second, to warm up the device
 init_download_dir
 init_frida_server
 
-if [[ -f "$MODPATH/.onboot_disabled" ]]; then
+start_on_boot=$(get_config START_ON_BOOT false)
+if [ "$start_on_boot" == "false" ]; then
     echo "- Frida server auto-start is disabled!"
     exit 1;
+elif [ "$start_on_boot" == "true" ]; then
+        run_frida
 else
-    run_frida
+    echo "- Unknown option '$start_on_boot'"
 fi;
