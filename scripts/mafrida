@@ -1,20 +1,26 @@
 #!/system/bin/sh
 
+MODPATH=.
 
-VERSION_DIR=.
-FRIDA_SERVER_FILENAME="shiny-egg"
+# import functions
+. $MODPATH/common.sh
+
+FRIDA_SERVER_FILENAME=$(get_config FRIDA_SERVER_FILENAME shiny-egg)
+
 
 
 function script_usage() {
     printf "Usage: mafrida [--set <frida-version> | -g | kill | start | status]\n"
-    printf "  --set <version>   Set and install the specified Frida version (e.g., 16.1.4)\n"
-    printf "  -g                Show the currently set Frida version\n"
-    printf "  download          Download the frida-server binary for the set version\n"
-    printf "  kill              Force kill any running frida-server instance\n"
-    printf "  start             Start frida-server using the set version\n"
-    printf "  status            Check if frida-server is currently running\n"
-    printf "  enable            Enable frida-server to auto-start on boot\n"
-    printf "  disable           Disable frida-server from auto-starting on boot\n"
+    printf "  --set <version>               Set and install the specified Frida version (e.g., 16.1.4)\n"
+    printf "  -g                            Show the currently set Frida version\n"
+    printf "  -p, --port <port>             Set server port, default: 27042\n"
+    printf "  -n, --server-filename <name>  server filename, default: shiny-egg\n"    
+    printf "  download                      Download the frida-server binary for the set version\n"
+    printf "  kill                          Force kill any running frida-server instance\n"
+    printf "  start                         Start frida-server using the set version\n"
+    printf "  status                        Check if frida-server is currently running\n"
+    printf "  enable                        Enable frida-server to auto-start on boot\n"
+    printf "  disable                       Disable frida-server from auto-starting on boot\n"
 }
 
 
@@ -30,30 +36,40 @@ if [[ $# -lt 3 ]]; then
             exit 1
         else
             echo "- setting frida server version to $2"
-            echo -n $2 > "$VERSION_DIR/frida_version.txt"
+            set_config FRIDA_VERSION $2
         fi;
 
     # get frida server version
     elif [[ $1 == "-g" ]]; then
-        if [[ -f "$VERSION_DIR/frida_version.txt" ]]; then
-            echo "- current Frida server version: $(cat "$VERSION_DIR/frida_version.txt")"
-        else
-            echo "! no Frida version set yet"
-        fi;
+
+        echo "- current Frida server version: $(get_config FRIDA_VERSION null)"
     
+    # set custom server port
+    elif [[ $1 == "-p" || $1 == "--port" ]]; then
+
+        echo "- setting port to $2"
+        set_config SERVER_PORT $2
+    
+    # set custom filename for frida server
+    elif [[ $1 == "-n" || $1 == "--server-filename" ]]; then
+
+        if pgrep -f "$FRIDA_SERVER_FILENAME" > /dev/null; then
+            echo "- Frida server is running. Please kill the process before changing the filename."
+            exit 1;
+        else
+            echo "- setting server filename to '$2'"
+            rename_server_filename $2
+            set_config FRIDA_SERVER_FILENAME $2
+        fi;
+
     elif [[ $1 == "download" ]]; then
         if pgrep -f "$FRIDA_SERVER_FILENAME" > /dev/null; then
             echo "- Frida server is already running. Please kill the process first!"
             exit 1
-        elif [[ ! -f "$VERSION_DIR/frida_version.txt" ]]; then
-            echo "- Set frida version first."
-            exit 1
         else
-            . $VERSION_DIR/common.sh
-            MODPATH=$VERSION_DIR
             init_download_dir >/dev/null 2>&1
             echo "- Downloading..."
-            init_frida_server > /dev/null 2>&1
+            init_frida_server
             echo "- Done."
         fi;
     
@@ -72,37 +88,28 @@ if [[ $# -lt 3 ]]; then
         if pgrep -f "$FRIDA_SERVER_FILENAME" > /dev/null; then
             echo "- server is already running."
         else
-            nohup "$VERSION_DIR/files/$FRIDA_SERVER_FILENAME" > "$VERSION_DIR/nohup.out" 2>&1 &
+            port=$(get_config SERVER_PORT 27042)
+            nohup "$MODPATH/files/$FRIDA_SERVER_FILENAME" --listen "127.0.0.1:$port" > "$MODPATH/nohup.out" 2>&1 &
             echo "- server started!, happy hacking :)"
         fi;
     
     # check if server is running
     elif [[ $1 == "status" ]]; then
         if pgrep -f "$FRIDA_SERVER_FILENAME" > /dev/null; then
-            echo "- server is running :)"
+            echo "- server is running on port $(get_config SERVER_PORT 0) :)"
         else
             echo "- server is not running :("
         fi;
     
     # enable frida server to start on boot
     elif [[ $1 == "enable" ]]; then
-        if [[ -f "$VERSION_DIR/.onboot_disabled" ]]; then
-            rm -f "$VERSION_DIR/.onboot_disabled"
-            echo "- Frida server enabled on boot."
-        else
-            echo "- Frida server is already enabled on boot."
-            exit 1;
-        fi;
+
+        set_config START_ON_BOOT true
 
     # disable frida server on boot    
     elif [[ $1 == "disable" ]]; then
-        if [[ -f "$VERSION_DIR/.onboot_disabled" ]]; then
-            echo "- Frida server is already disabled on boot."
-            exit 1;
-        else
-            >"$VERSION_DIR/.onboot_disabled"
-            echo "- Frida server disabled on boot"
-        fi;
+
+        set_config START_ON_BOOT false
 
     else
         script_usage

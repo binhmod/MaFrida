@@ -21,15 +21,17 @@ A simple yet powerful Magisk module that automates starting the [Frida](https://
 Use the `mafrida` CLI tool to manage the [Frida](https://github.com/frida/frida) server:
 
 ```sh
-Usage: mafrida [--set <frida-version> | -g | kill | start | status | enable | disable]
-    --set <version>   Set and install the specified Frida version (e.g., 16.6.1)
-    -g                Show the currently set Frida version
-    download          Download the frida-server binary for the set version
-    kill              Force kill any running frida-server instance
-    start             Start frida-server using the set version
-    status            Check if frida-server is currently running
-    enable            Enable frida-server to auto-start on boot
-    disable           Disable frida-server from auto-starting on boot
+Usage: mafrida [--set <frida-version> | -g | kill | start | status]
+  --set <version>               Set and install the specified Frida version (e.g., 16.1.4)
+  -g                            Show the currently set Frida version
+  -p, --port <port>             Set server port, default: 27042
+  -n, --server-filename <name>  server filename, default: shiny-egg
+  download                      Download the frida-server binary for the set version
+  kill                          Force kill any running frida-server instance
+  start                         Start frida-server using the set version
+  status                        Check if frida-server is currently running
+  enable                        Enable frida-server to auto-start on boot
+  disable                       Disable frida-server from auto-starting on boot
 ```
 
 ### Demo
