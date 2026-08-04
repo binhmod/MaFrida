@@ -39,6 +39,7 @@ get_config() {
 set_config_to_default() {
 
     set_config SERVER_PORT 27042
+    set_config SERVER_IP 127.0.0.1
     set_config START_ON_BOOT false
     set_config FRIDA_VERSION latest
     set_config FRIDA_SERVER_FILENAME shiny-egg
@@ -143,6 +144,7 @@ function run_frida() {
 
     frida_server_filename=$(get_config FRIDA_SERVER_FILENAME shiny-egg)
     port=$(get_config SERVER_PORT 27042)
+    ip=$(get_config SERVER_IP 127.0.0.1)
 
     if pgrep -f "$frida_server_filename" > /dev/null; then
         pkill "$frida_server_filename"
@@ -151,7 +153,7 @@ function run_frida() {
     fi;
 
     # start server
-    nohup "$MODPATH/files/$frida_server_filename" --listen "127.0.0.1:$port"
+    nohup "$MODPATH/files/$frida_server_filename" --listen "$ip:$port"
 
 
 }
