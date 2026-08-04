@@ -14,6 +14,7 @@ function script_usage() {
     printf "  --set <version>               Set and install the specified Frida version (e.g., 16.1.4)\n"
     printf "  -g                            Show the currently set Frida version\n"
     printf "  -p, --port <port>             Set server port, default: 27042\n"
+    printf "  -i, --ip <ip>                 Set server listen IP, default: 127.0.0.1\n"
     printf "  -n, --server-filename <name>  server filename, default: shiny-egg\n"    
     printf "  download                      Download the frida-server binary for the set version\n"
     printf "  kill                          Force kill any running frida-server instance\n"
@@ -49,7 +50,13 @@ if [[ $# -lt 3 ]]; then
 
         echo "- setting port to $2"
         set_config SERVER_PORT $2
-    
+
+    # set custom listen ip
+    elif [[ $1 == "-i" || $1 == "--ip" ]]; then
+
+        echo "- setting ip to $2"
+        set_config SERVER_IP $2
+
     # set custom filename for frida server
     elif [[ $1 == "-n" || $1 == "--server-filename" ]]; then
 
@@ -89,14 +96,15 @@ if [[ $# -lt 3 ]]; then
             echo "- server is already running."
         else
             port=$(get_config SERVER_PORT 27042)
-            nohup "$MODPATH/files/$FRIDA_SERVER_FILENAME" --listen "127.0.0.1:$port" > "$MODPATH/nohup.out" 2>&1 &
+            ip=$(get_config SERVER_IP 127.0.0.1)
+            nohup "$MODPATH/files/$FRIDA_SERVER_FILENAME" --listen "$ip:$port" > "$MODPATH/nohup.out" 2>&1 &
             echo "- server started!, happy hacking :)"
         fi;
     
     # check if server is running
     elif [[ $1 == "status" ]]; then
         if pgrep -f "$FRIDA_SERVER_FILENAME" > /dev/null; then
-            echo "- server is running on port $(get_config SERVER_PORT 0) :)"
+            echo "- server is running on $(get_config SERVER_IP 127.0.0.1):$(get_config SERVER_PORT 0) :)"
         else
             echo "- server is not running :("
         fi;
