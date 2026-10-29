@@ -130,7 +130,7 @@ function get_frida_version() {
     local frida_version
     frida_version=$(get_config FRIDA_VERSION latest)
 
-    # User pinned a specific version — validate it exists, use as-is
+    # User pinned a specific version - validate it exists, use as-is
     if [ "$frida_version" != "latest" ]; then
 
         local tag_status
